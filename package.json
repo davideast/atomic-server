@@ -1,0 +1,19 @@
+{
+  "name": "atomic-server",
+  "main": "./lib/atomic-server",
+  "version": "0.0.0",
+  "description": "A short description of your package",
+  "activationEvents": ["atomic-server:toggle"],
+  "repository": "https://github.com/atom/atomic-server",
+  "license": "MIT",
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "dependencies": {
+    "method-override": "^2.1.1",
+    "errorhandler": "^1.1.1",
+    "body-parser": "^1.4.3",
+    "express": "^4.6.1",
+    "loophole": "^1.0.0"
+  }
+}

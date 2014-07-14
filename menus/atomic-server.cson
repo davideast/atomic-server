@@ -1,0 +1,18 @@
+# See https://atom.io/docs/latest/creating-a-package#menus for more details
+'context-menu':
+  '.overlayer':
+      'Enable atomic-server': 'atomic-server:toggle'
+
+'menu': [
+  {
+    'label': 'Packages'
+    'submenu': [
+      'label': 'atomic-server'
+      'submenu': [
+        { 'label': 'Toggle', 'command': 'atomic-server:toggle' },
+        { 'label': 'Start', 'command': 'atomic-server:start' }
+        { 'label': 'Close', 'command': 'atomic-server:close' }
+      ]
+    ]
+  }
+]
