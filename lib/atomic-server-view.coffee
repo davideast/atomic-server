@@ -1,4 +1,4 @@
-{View} = require 'atom'
+{View, EditorView} = require 'atom'
 {allowUnsafeEval} = require 'loophole'
 express = allowUnsafeEval -> require 'express'
 app = express()
@@ -11,51 +11,66 @@ module.exports =
 class AtomicServerView extends View
   @content: ->
     @div class: 'atomic-server overlay from-top', =>
-      @div "The AtomicServer package is Alive! It's ALIVE!", class: "message"
+      @subview 'miniEditor', new EditorView(mini: true)
+      @div class: 'message', outlet: 'message'
+      #@div "The AtomicServer package is Alive! It's ALIVE!", class: "message"
 
   initialize: (serializeState) ->
-        atom.workspaceView.command "express-server:toggle", => @toggle()
-        atom.workspaceView.command "express-server:start", => @start()
-        atom.workspaceView.command "express-server:close", => @close()
+    atom.workspaceView.command "atomic-server:toggle", => @toggle()
+    atom.workspaceView.command "atomic-server:start", => @start()
+    atom.workspaceView.command "atomic-server:close", => @close()
 
-      # Returns an object that can be retrieved when package is activated
-      serialize: ->
+    @miniEditor.hiddenInput.on 'focusout', => @detach() unless @detaching
+    @on 'core:confirm', => @start()
+    @on 'core:cancel', => @detach()
 
-      # Tear down any state and detach
-      destroy: ->
-        @close()
-        @detach()
+    @miniEditor.preempt 'textInput', (e) =>
+      true
+      #false unless e.originalEvent.data.match(/[0-9\-]/)
 
-      toggle: ->
-        console.log "Express Server was toggled!"
-        #console.log server
-        if @hasParent()
-          @detach()
-        else
-          atom.workspaceView.append(this)
+  # Returns an object that can be retrieved when package is activated
+  serialize: ->
 
-      start: ->
-        console.log "Starting!"
+  # Tear down any state and detach
+  destroy: ->
+    @close()
+    @detach()
 
-        serve = (req, res) -> res.redirect "/index.html"
+  toggle: ->
+    console.log "Express Server was toggled!"
+    #console.log server
+    if @hasParent()
+      @detach()
+    else
+      atom.workspaceView.append(this)
 
-        app.get "/", serve
+  start: ->
+    console.log "Starting!"
+    serverPort = @miniEditor.getText()
 
-        app.use methodOverride
-        app.use bodyParser.json
-        # app.use bodyParser.urlEncoded {
-        #   extended: true
-        # }
-        app.use express.static __dirname + '/public'
+    serve = (req, res) -> res.redirect "/index.html"
 
-        # app.use(errorHandler({
-        #   dumpExceptions: true,
-        #   showStack: true
-        # }));
+    app.get "/", serve
 
-        console.log "Simple static server listening at http://localhost:" + port
-        app.listen port
+    app.use methodOverride
+    app.use bodyParser.json
 
-      close: ->
-        console.log "Shutting down!"
-        app.close
+    app.use bodyParser.urlencoded
+      extended: true
+
+    #app.use express.static __dirname + '/public'
+    projectPath = atom.project.getPath()
+
+    #console.log projectPath
+    app.use express.static(projectPath)
+
+    app.use errorHandler
+      dummyExceptions: true
+      showStack: true
+
+    console.log "Simple static server listening at http://localhost:#{serverPort}"
+    app.listen serverPort
+
+  close: ->
+    console.log "Shutting down!"
+    app.close
